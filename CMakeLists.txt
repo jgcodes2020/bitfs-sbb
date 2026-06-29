@@ -32,3 +32,4 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(decan-hpp)
+add_subdirectory(sm64-utils)

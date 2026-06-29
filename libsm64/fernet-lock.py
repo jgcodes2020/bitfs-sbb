@@ -1,12 +1,35 @@
 #!/usr/bin/python3
 
 from argparse import ArgumentParser, ArgumentError
+import platform
 
 from typing import Callable
 from pathlib import Path
 
+# valid version IDs.
+VERSIONS = ["jp", "us", "eu", "sh"]
+# Mapping of platform.system() ids to platform directory names.
+PLATFORMS = {
+    "Windows": "win32",
+    "Linux": "linux",
+    "Darwin": "macos"
+}
+# Mapping of platform.system() ids to shared library extensions.
+DLL_EXTS = {
+    "Windows": ".dll",
+    "Linux": ".so",
+    "Darwin": ".dylib"
+}
+
+WSDIR = Path(__file__).parent
+ROM_DIR = WSDIR / "roms"
+LIB_DIR = WSDIR / "lib"
+DATA_DIR = WSDIR / f"data/{PLATFORMS[platform.system()]}"
+DLL_EXT = DLL_EXTS[platform.system()]
+
+
 parser = ArgumentParser(
-    description="Locks and unlocks libsm64 with a ROM.",
+    description="Locks and unlocks files using an N64 ROM as the key.",
     exit_on_error=True
 )
 parser.set_defaults(func=lambda x: parser.print_usage())
@@ -16,7 +39,7 @@ subparsers = parser.add_subparsers(
     metavar="<subcmd>"
 )
 unlock_parser = subparsers.add_parser("unlock", 
-    help="Unlocks libsm64."
+    help="Unlocks a file with a given key."
 )
 unlock_parser.add_argument("input",
     help="The input.",
@@ -36,7 +59,7 @@ unlock_parser.add_argument("-o", "--output",
 )
 
 lock_parser = subparsers.add_parser("lock", 
-    help="Locks libsm64."
+    help="Locks a file with a given key."
 )
 lock_parser.add_argument("input",
     help="The input.",
@@ -53,6 +76,13 @@ lock_parser.add_argument("-o", "--output",
     dest="output",
     type=Path,
     required=True
+)
+
+unlock_all_parser = subparsers.add_parser("unlock-all")
+unlock_all_parser.add_argument("versions",
+    help="The versions to unlock.",
+    nargs="+",
+    choices=VERSIONS,
 )
 
 args = parser.parse_args()
@@ -129,8 +159,27 @@ def unlock(clib_p: Path, rom_p: Path, lib_p: Path):
     lib = decrypt(rom, clib)
     with open(lib_p, "wb") as lib_f:
         lib_f.write(lib)
+
+def unlock_all(versions: list[str]):
+    LIB_DIR.mkdir(parents=True, exist_ok=True)
+
+    for version in versions:
+        rom_path = ROM_DIR / f"sm64-{version}.z64"
+        clib_path = DATA_DIR / f"sm64_{version}{DLL_EXT}.locked"
+        lib_path = LIB_DIR / f"sm64_{version}{DLL_EXT}"
+
+        if not rom_path.exists():
+            raise FileNotFoundError(rom_path)
+        if not clib_path.exists():
+            raise FileNotFoundError(clib_path)
         
+        print(f"unlocking {rom_path}")
+        unlock(clib_path, rom_path, lib_path)
+
+
 if args.p_subcmd == "lock":
     lock(args.input, args.rom, args.output)
 elif args.p_subcmd == "unlock":
     unlock(args.input, args.rom, args.output)
+elif args.p_subcmd == "unlock-all":
+    unlock_all(args.versions)

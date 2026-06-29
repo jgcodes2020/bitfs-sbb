@@ -10,9 +10,11 @@
     #define NOMINMAX
     #include <windows.h>
 
-    #define TAS_FW_STDCALL __stdcall
+    // On Windows, applies the stdcall calling convention.
+    #define DECAN_STDCALL __stdcall
   #elif defined(__linux__)
-    #define TAS_FW_STDCALL
+    // On Windows, applies the stdcall calling convention.
+    #define DECAN_STDCALL
   #endif
 
 namespace decan {
@@ -34,8 +36,22 @@ namespace decan {
 
   public:
     library(const std::filesystem::path& path);
-    ~library();
+    
+    library(const library&) = delete;
+    library& operator=(const library&) = delete;
 
+    library(library&& rhs) : m_filename(std::move(rhs.m_filename)), m_handle(rhs.m_handle) {
+      // zero the RHS handle to avoid misuse
+      rhs.m_handle = (handle_t) 0;
+    }
+    library& operator=(library&& rhs) {
+      // destruct, then move-construct.
+      this->~library();
+      new(this) library(std::move(rhs));
+      return *this;
+    }
+    
+    ~library();
 		// Gets a symbol from a library.
 		// This maps directly to GetProcAddress/dlsym.
     void* get(const char* symbol) const;

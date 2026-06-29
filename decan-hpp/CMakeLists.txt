@@ -9,5 +9,8 @@ elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     target_sources(decan-hpp PRIVATE "src/decan_linux.cpp")
 endif()
 
-target_include_directories(decan-hpp PUBLIC "include")
 global_target_settings(decan-hpp)
+target_include_directories(decan-hpp PUBLIC "include")
+target_link_libraries(decan-hpp PUBLIC
+    ${CMAKE_DL_LIBS}
+)
