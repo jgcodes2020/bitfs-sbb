@@ -1,7 +1,9 @@
 
 add_library(sm64-utils STATIC
     # headers
+    "include/sm64/camera.hpp"
     "include/sm64/constants.hpp"
+    "include/sm64/globals.hpp"
     "include/sm64/library.hpp"
     "include/sm64/object_fields.hpp"
     "include/sm64/types.hpp"

@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <memory>
+#include "sm64/globals.hpp"
 #include <decan.hpp>
 
 namespace sm64 {
@@ -50,6 +51,10 @@ namespace sm64 {
     // Advances the game state by 1 frame.
     void advance();
 
+    // Retrieves a reference to a global.
+    template <class T>
+    T& operator[](global_tag<T> global);
+
     // Creates a new, empty savestate.
     state blank_state();
     // Saves the current state to a savestate.
@@ -68,6 +73,12 @@ namespace sm64 {
     p_sm64_init mfp_sm64_init;
     p_sm64_update mfp_sm64_update;
   };
+
+  template <class T>
+  T& libsm64::operator[](global_tag<T> global) {
+    void* ptr = m_lib.get(global.name());
+    return *reinterpret_cast<T*>(ptr);
+  }
 }
 
 #endif

@@ -2,7 +2,8 @@
 #define SM64_TYPES_HPP_INCLUDED
 
 #include <array>
-#include "ultra_types.hpp"
+
+#include "sm64/ultra_types.hpp"
 
 namespace sm64 {
 
@@ -15,15 +16,15 @@ namespace sm64 {
 
   using Mat4 = std::array<std::array<f32, 4>, 4>;
 
-  using GeoLayout = uintptr_t;
-  using LevelScript = uintptr_t;
-  using Movtex = s16;
-  using MacroObject = s16;
-  using Collision = s16;
-  using Trajectory = s16;
-  using PaintingData = s16;
+  using GeoLayout      = uintptr_t;
+  using LevelScript    = uintptr_t;
+  using Movtex         = s16;
+  using MacroObject    = s16;
+  using Collision      = s16;
+  using Trajectory     = s16;
+  using PaintingData   = s16;
   using BehaviorScript = uintptr_t;
-  using Texture = u8;
+  using Texture        = u8;
 
   struct Animation {
     /*0x00*/ s16 flags;
@@ -257,6 +258,13 @@ namespace sm64 {
     /*0xC0*/ f32 quicksandDepth;
     /*0xC4*/ f32 unkC4;
   };
+
+  typedef struct {
+    u16 button;
+    s8 stick_x; /* -80 <= stick_x <= 80 */
+    s8 stick_y; /* -80 <= stick_y <= 80 */
+    u8 errnum;
+  } OSContPad;
 }  // namespace sm64
 
 #endif
