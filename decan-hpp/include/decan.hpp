@@ -12,9 +12,13 @@
 
     // On Windows, applies the stdcall calling convention.
     #define DECAN_STDCALL __stdcall
+    // The platform library extension.
+    #define DECAN_LIB_EXT ".dll"
   #elif defined(__linux__)
     // On Windows, applies the stdcall calling convention.
     #define DECAN_STDCALL
+    // The platform library extension.
+    #define DECAN_LIB_EXT ".so"
   #endif
 
 namespace decan {
