@@ -47,6 +47,8 @@ namespace sm64 {
     SM64_GLOBAL(Camera*, gCamera);
     // The pool to which all objects are allocated.
     SM64_GLOBAL(Object[OBJECT_POOL_CAPACITY], gObjectPool);
+    // The index of the current stage.
+    SM64_GLOBAL(int, gCurrLevelNum);
 
     #undef SM64_GLOBAL
   };

@@ -22,7 +22,12 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# base libraries
 add_subdirectory(decan-hpp)
 add_subdirectory(vcr)
 
+# sm64 and stuff
 add_subdirectory(sm64-utils)
+
+# actual bruteforcers
+add_subdirectory(onekey-test)
