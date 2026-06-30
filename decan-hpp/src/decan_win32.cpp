@@ -17,12 +17,12 @@
 
 namespace decan {
 
-  library::library(const std::filesystem::path& fileName) :
-    m_filename(fileName.string()), m_handle([&]() -> HMODULE {
-      HMODULE res = LoadLibraryW(fileName.c_str());
+  library::library(const std::filesystem::path& file_name) :
+    m_filename(file_name.string()), m_handle([&]() -> HMODULE {
+      HMODULE res = LoadLibraryW(file_name.c_str());
       if (res == nullptr) {
-        DWORD lastError = GetLastError();
-        throw std::system_error(lastError, std::system_category());
+        DWORD last_error = GetLastError();
+        throw std::system_error(last_error, std::system_category());
       }
       return res;
     }()) {}
@@ -30,9 +30,9 @@ namespace decan {
   library::~library() {
     bool good = FreeLibrary(m_handle);
     if (!good) {
-      DWORD lastError = GetLastError();
+      DWORD last_error = GetLastError();
       std::cerr << "FreeLibrary error: "
-                << std::system_error(lastError, std::system_category()).what()
+                << std::system_error(last_error, std::system_category()).what()
                 << '\n';
       std::cerr << "terminating...\n";
       std::terminate();
@@ -42,8 +42,8 @@ namespace decan {
   void* library::get(const char* symbol) const {
     FARPROC res = GetProcAddress(m_handle, symbol);
     if (res == nullptr) {
-      DWORD lastError = GetLastError();
-      throw std::system_error(lastError, std::system_category());
+      DWORD last_error = GetLastError();
+      throw std::system_error(last_error, std::system_category());
     }
 
     return reinterpret_cast<void*>(res);
@@ -51,29 +51,29 @@ namespace decan {
 
   std::unordered_map<std::string, section_info> library::read_sections() {
     using std::ios_base;
-    std::unordered_map<std::string, section_info> sectionMap;
+    std::unordered_map<std::string, section_info> section_map;
 
     std::ifstream file(m_filename, std::ios::binary);
-    uint16_t numSections;
+    uint16_t num_sections;
     std::unique_ptr<IMAGE_SECTION_HEADER[]> sections;
-    std::unique_ptr<char[]> strTable;
+    std::unique_ptr<char[]> str_table;
     // Unlike Linux ELF, the PE format is incredibly convoluted.
     // I could use a library, but all the ones I've found are humongous.
     {
       // Locate PE signature offset
       file.seekg(0x3C, ios_base::beg);
-      uint32_t nextOffset;
-      file.read(reinterpret_cast<char*>(&nextOffset), sizeof(uint32_t));
+      uint32_t next_offset;
+      file.read(reinterpret_cast<char*>(&next_offset), sizeof(uint32_t));
       // PE signature is 4 bytes, so skip those
-      file.seekg(nextOffset + 4, ios_base::beg);
+      file.seekg(next_offset + 4, ios_base::beg);
       IMAGE_FILE_HEADER fileHeader;
       // Read out file header
       file.read(
         reinterpret_cast<char*>(&fileHeader), sizeof(IMAGE_FILE_HEADER));
-      numSections = fileHeader.NumberOfSections;
+      num_sections = fileHeader.NumberOfSections;
       // calculate string table offset
       // According to MS it's deprecated, but the DLLs still use it
-      nextOffset = fileHeader.PointerToSymbolTable +
+      next_offset = fileHeader.PointerToSymbolTable +
         sizeof(IMAGE_SYMBOL) * fileHeader.NumberOfSymbols;
       // Jump past optional header
       file.seekg(fileHeader.SizeOfOptionalHeader, ios_base::cur);
@@ -83,16 +83,16 @@ namespace decan {
         reinterpret_cast<char*>(sections.get()),
         fileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER));
       // Read string table size
-      uint32_t strTableSize;
-      file.seekg(nextOffset, ios_base::beg);
-      file.read(reinterpret_cast<char*>(&strTableSize), sizeof(uint32_t));
+      uint32_t str_table_size;
+      file.seekg(next_offset, ios_base::beg);
+      file.read(reinterpret_cast<char*>(&str_table_size), sizeof(uint32_t));
       // Read out string table
-      file.seekg(nextOffset, ios_base::beg);
-      strTable.reset(new char[strTableSize]);
-      file.read(strTable.get(), strTableSize);
+      file.seekg(next_offset, ios_base::beg);
+      str_table.reset(new char[str_table_size]);
+      file.read(str_table.get(), str_table_size);
     }
     std::string name;
-    for (size_t i = 0; i < numSections; i++) {
+    for (size_t i = 0; i < num_sections; i++) {
       // Copy the name into a std::string
       for (size_t j = 0; j < 8; j++) {
         if (sections[i].Name[j] == '\0') {
@@ -105,14 +105,14 @@ namespace decan {
       // find it
       if (name[0] == '/') {
         uint32_t off = strtoul(name.c_str() + 1, nullptr, 10);
-        name         = std::string(&strTable[off]);
+        name         = std::string(&str_table[off]);
       }
       // MS also put the section size in a union
-      sectionMap[name] = section_info {
+      section_map[name] = section_info {
         reinterpret_cast<char*>(m_handle) + sections[i].VirtualAddress,
         sections[i].Misc.VirtualSize};
     }
-    return sectionMap;
+    return section_map;
   }
 }  // namespace decan
 
