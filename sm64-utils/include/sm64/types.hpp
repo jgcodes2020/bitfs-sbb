@@ -26,6 +26,8 @@ namespace sm64 {
   using BehaviorScript = uintptr_t;
   using Texture        = u8;
 
+  
+
   struct Animation {
     /*0x00*/ s16 flags;
     /*0x02*/ s16 animYTransDivisor;

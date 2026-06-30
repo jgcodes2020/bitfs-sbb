@@ -57,7 +57,11 @@ namespace sm64 {
 
     // Retrieves a reference to a global.
     template <class T>
-    T& operator[](global_tag<T> global);
+    T& operator[](sized_global<T> global);
+
+    // Retrieves a reference to a global.
+    template <class T>
+    T operator[](ptr_global<T> global);
 
     // Sets a given controller port's input using a VCR frame.
     void set_input(vcr::frame frame, uint8_t port = 0);
@@ -85,9 +89,15 @@ namespace sm64 {
   };
 
   template <class T>
-  T& libsm64::operator[](global_tag<T> global) {
+  T& libsm64::operator[](sized_global<T> global) {
     void* ptr = m_lib.get(global.name());
     return *reinterpret_cast<T*>(ptr);
+  }
+
+  template <class T>
+  T libsm64::operator[](ptr_global<T> global) {
+    void* ptr = m_lib.get(global.name());
+    return reinterpret_cast<T>(ptr);
   }
 }
 

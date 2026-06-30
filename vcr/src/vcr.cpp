@@ -59,7 +59,6 @@ namespace vcr {
 
   m64::m64(fs::path path) :
     m_inputs(1) {
-    std::cerr << "Path is " << fs::absolute(path) << "\n";
     std::ifstream in(fs::absolute(path), ios::in | ios::binary);
     if (!in.good()) {
       stringstream fmt;
@@ -97,7 +96,6 @@ namespace vcr {
       metadata.vis_per_s = data[m64_offs::vis_per_s];
       metadata.num_controllers = data[m64_offs::num_controllers];
       read_int32(&data[m64_offs::num_input_frames], metadata._num_input_frames);
-      std::cerr << "Input frame len is: " << metadata._num_input_frames << "\n";
       // perform type-punning pointer casts, since underlying types are defined
       read_int16(&data[m64_offs::start_type], *reinterpret_cast<uint16_t*>(&metadata.start_type));
       read_int32(&data[m64_offs::controllers], *reinterpret_cast<uint32_t*>(&metadata.controllers));

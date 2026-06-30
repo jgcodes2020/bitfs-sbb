@@ -1,10 +1,14 @@
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <filesystem>
 #include <print>
 #include "sm64/constants.hpp"
+#include "sm64/object_fields.hpp"
 #include "sm64/globals.hpp"
 #include "sm64/library.hpp"
+#include "sm64/types.hpp"
 #include "vcr.hpp"
 
 const struct {
@@ -19,9 +23,22 @@ int main() {
   sm64::libsm64 sm64(main_paths.libsm64_jp);
   vcr::m64 onekey(main_paths.onekey_m64);
 
-  auto& gCurrLevelNum   = sm64[globals::gCurrLevelNum];
+  auto& gCurrLevelNum = sm64[globals::gCurrLevelNum];
+  auto& gObjectPool   = sm64[globals::gObjectPool];
 
-  auto bitfs_state = sm64.blank_state();
+  const auto* bhvBully = sm64[globals::bhvSmallBully];
+  const auto* bhvWiiVCPlat = sm64[globals::bhvBitFSSinkingPlatforms];
+  const auto* bhvSpinHeart = sm64[globals::bhvRecoveryHeart];
+
+  constexpr size_t BULLY_SLOT = 27;
+  constexpr size_t HEART_SLOT = 29;
+  constexpr size_t WIIVC_PLAT_SLOT = 81;
+
+  constexpr float BULLY_HOME_Y = -2764;
+  constexpr float WIIVC_PLAT_HOME_Y = -3065;
+  constexpr float HEART_Y = -2700;
+
+  auto bitfs_state         = sm64.blank_state();
   uint32_t bitfs_frame_idx = 0;
 
   for (uint32_t i = 0; i < onekey.size(); i++) {
@@ -40,4 +57,17 @@ int main() {
   // reload BitFS
   sm64.load_from(bitfs_state);
   assert(gCurrLevelNum == sm64::LEVEL_BITFS);
+  
+  // confirm bully, heart, and wiivc platform are in their respective slots
+  auto& bully = gObjectPool[BULLY_SLOT];
+  auto& heart = gObjectPool[HEART_SLOT];
+  auto& wiivc_plat = gObjectPool[WIIVC_PLAT_SLOT];
+
+  assert(bully.behavior == bhvBully);
+  assert(heart.behavior == bhvSpinHeart);
+  assert(wiivc_plat.behavior == bhvWiiVCPlat);
+
+  assert(bully.oHomeY == BULLY_HOME_Y);
+  assert(heart.oPosY == HEART_Y);
+  assert(wiivc_plat.oHomeY == WIIVC_PLAT_HOME_Y);
 }
