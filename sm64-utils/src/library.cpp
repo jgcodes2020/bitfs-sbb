@@ -1,6 +1,8 @@
 #include "sm64/library.hpp"
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include "vcr.hpp"
 
 namespace sm64 {
   libsm64::libsm64(const std::filesystem::path& path) : m_lib(path) {
@@ -13,6 +15,9 @@ namespace sm64 {
     mfp_sm64_init   = (p_sm64_init) m_lib.get("sm64_init");
     mfp_sm64_update = (p_sm64_update) m_lib.get("sm64_update");
 
+    // get needed globals
+    m_gControllerPads = &(*this)[globals::gControllerPads];
+
     // call sm64_init
     mfp_sm64_init();
   }
@@ -20,6 +25,17 @@ namespace sm64 {
   void libsm64::advance() {
     // sm64_update advances the game 1 frame
     mfp_sm64_update();
+  }
+
+  void libsm64::set_input(vcr::frame frame, uint8_t port) {
+    if (port > 3)
+      throw std::out_of_range("Port must range between 0 and 3");
+    
+    // inputs are set by directly modifying gControllerPads; these are reset after each frame advance
+    auto& pad_obj = (*m_gControllerPads)[port];
+    pad_obj.button = (u16) frame.buttons;
+    pad_obj.stick_x = frame.stick_x;
+    pad_obj.stick_y = frame.stick_y;
   }
 
   libsm64::state libsm64::blank_state() {

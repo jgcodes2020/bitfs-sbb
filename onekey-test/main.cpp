@@ -1,7 +1,8 @@
 
+#include <cassert>
 #include <filesystem>
-#include <ios>
-#include <iostream>
+#include <print>
+#include "sm64/constants.hpp"
 #include "sm64/globals.hpp"
 #include "sm64/library.hpp"
 #include "vcr.hpp"
@@ -18,21 +19,25 @@ int main() {
   sm64::libsm64 sm64(main_paths.libsm64_jp);
   vcr::m64 onekey(main_paths.onekey_m64);
 
-  auto& gControllerPads = sm64[globals::gControllerPads];
   auto& gCurrLevelNum   = sm64[globals::gCurrLevelNum];
 
-  std::cout << "gCurrLevelNum = 0x" << std::hex << gCurrLevelNum << std::endl;
+  auto bitfs_state = sm64.blank_state();
+  uint32_t bitfs_frame_idx = 0;
 
   for (uint32_t i = 0; i < onekey.size(); i++) {
-    gControllerPads[0].button  = (uint16_t) onekey[i].buttons;
-    gControllerPads[0].stick_x = onekey[i].stick_x;
-    gControllerPads[0].stick_y = onekey[i].stick_y;
-
-    sm64.advance();
-
-    if (i % 150 == 0) {
-      std::cout << "gCurrLevelNum = 0x" << std::hex << gCurrLevelNum
-                << std::endl;
+    if (gCurrLevelNum == sm64::LEVEL_BITFS && bitfs_frame_idx == 0) {
+      std::println("Found BitFS before frame {}", i);
+      bitfs_frame_idx = i;
+      sm64.save_to(bitfs_state);
     }
+
+    sm64.set_input(onekey[i]);
+    sm64.advance();
   }
+  // confirm that the .m64 reaches the end of the run
+  assert(gCurrLevelNum == sm64::LEVEL_BOWSER_3);
+
+  // reload BitFS
+  sm64.load_from(bitfs_state);
+  assert(gCurrLevelNum == sm64::LEVEL_BITFS);
 }

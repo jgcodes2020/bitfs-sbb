@@ -2,6 +2,7 @@
 #define SM64_CONSTANTS_HPP_INCLUDED
 
 // Layers
+#include "sm64/ultra_types.hpp"
 #define LAYER_FORCE 0
 #define LAYER_OPAQUE 1
 #define LAYER_OPAQUE_DECAL 2
@@ -695,7 +696,7 @@
 
 namespace sm64 {
   // Enumeration of all the levels in the game.
-  enum LevelEnum {
+  enum LevelEnum : s16 {
     LEVEL_NONE = 0,
     LEVEL_UNKNOWN_1,
     LEVEL_UNKNOWN_2,

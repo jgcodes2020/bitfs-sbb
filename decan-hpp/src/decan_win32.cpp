@@ -2,12 +2,10 @@
 #if defined(_WIN32)
   #include "decan.hpp"
 
-  #include <codecvt>
   #include <exception>
   #include <fstream>
   #include <iostream>
   #include <memory>
-  #include <stdexcept>
   #include <string>
   #include <system_error>
   #include <unordered_map>

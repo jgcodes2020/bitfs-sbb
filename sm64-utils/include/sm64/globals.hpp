@@ -48,7 +48,7 @@ namespace sm64 {
     // The pool to which all objects are allocated.
     SM64_GLOBAL(Object[OBJECT_POOL_CAPACITY], gObjectPool);
     // The index of the current stage.
-    SM64_GLOBAL(int, gCurrLevelNum);
+    SM64_GLOBAL(s16, gCurrLevelNum);
 
     #undef SM64_GLOBAL
   };

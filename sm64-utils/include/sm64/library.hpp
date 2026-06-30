@@ -4,12 +4,15 @@
 #include <filesystem>
 #include <memory>
 #include "sm64/globals.hpp"
+#include "sm64/types.hpp"
+#include "vcr.hpp"
 #include <decan.hpp>
 
 namespace sm64 {
   using p_sm64_init = void (DECAN_STDCALL*)();
   using p_sm64_update = void (DECAN_STDCALL*)();
 
+  // Class encapsulating libsm64.
   class libsm64 {
   public:
     class state {
@@ -27,8 +30,9 @@ namespace sm64 {
     private:
       state(const libsm64& lib);
 
+      // Checks whether a given state's buffers can be reused.
       bool is_valid_for(const libsm64& lib) const;
-      // 
+      // allocates/reallocates buffers for the savestate.
       void allocate_for(const libsm64& lib);
 
       std::unique_ptr<std::byte[]> m_data_base;
@@ -55,6 +59,9 @@ namespace sm64 {
     template <class T>
     T& operator[](global_tag<T> global);
 
+    // Sets a given controller port's input using a VCR frame.
+    void set_input(vcr::frame frame, uint8_t port = 0);
+
     // Creates a new, empty savestate.
     state blank_state();
     // Saves the current state to a savestate.
@@ -72,6 +79,9 @@ namespace sm64 {
     // useful functions
     p_sm64_init mfp_sm64_init;
     p_sm64_update mfp_sm64_update;
+
+    // internal pointers
+    OSContPad (*m_gControllerPads)[4];
   };
 
   template <class T>
