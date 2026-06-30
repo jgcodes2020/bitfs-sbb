@@ -56,7 +56,7 @@ namespace decan {
 		// This maps directly to GetProcAddress/dlsym.
     void* get(const char* symbol) const;
 
-    // Loads the file and parses 
+    // Loads the file and parses section data.
     std::unordered_map<std::string, section_info> read_sections();
   };
 

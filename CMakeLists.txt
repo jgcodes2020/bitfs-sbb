@@ -3,15 +3,6 @@ project(bitfs-sbb
     DESCRIPTION "The automation for SBB in BitFS."
     LANGUAGES C CXX
 )
-#[===[
-Applies a bunch of common settings to a target.
-]===]
-function(global_target_settings target)
-    set_target_properties("${target}" PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-    )
-endfunction()
 
 # shamelessly stolen from here; sets build type automagically
 # https://www.kitware.com/cmake-and-the-default-build-type/
@@ -32,4 +23,6 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(decan-hpp)
+add_subdirectory(vcr)
+
 add_subdirectory(sm64-utils)

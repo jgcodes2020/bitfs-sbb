@@ -2,7 +2,6 @@
 #if defined(__linux__)
   #include "decan.hpp"
 
-  #include <codecvt>
   #include <exception>
   #include <fstream>
   #include <iostream>
