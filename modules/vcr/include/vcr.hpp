@@ -4,6 +4,8 @@
 #include <string.h>
 #include <cstdint>
 #include <filesystem>
+#include <iterator>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -283,14 +285,12 @@ namespace vcr {
     /**
      * @brief Creates an M64 directly from a list of inputs and metadata.
      *
-     * @tparam input_it an input iterator of m64::frame
-     * @param begin the beginning iterator
-     * @param end the ending iterator
+     * @param source an input range containing the list of frames
      * @param mdata the metadata
      */
-    template <typename input_it>
-    m64(input_it begin, input_it end, const metadata_t& mdata) :
-      m_inputs(begin, end), metadata(mdata) {
+    template <std::ranges::input_range TSource>
+    m64(TSource source, const metadata_t& mdata) :
+      m_inputs(std::begin(source), std::end(source)), metadata(mdata) {
       size_t rsize = m_inputs.size();
       // if any of the upper 32 bits are set, it's too big
       if (rsize & 0xFFFFFFFF00000000) {

@@ -10,15 +10,15 @@ namespace trowel {
     const std::filesystem::path& sm64_path,
     std::vector<vcr::frame>&& input_frames) :
     m_sm64(sm64_path),
-    m_inputs(std::move(input_frames)),
+    m_frames(std::move(input_frames)),
     m_reset_state(sm64::libsm64::state()) {
     m_sm64.save_to(m_reset_state);
   }
 
   size_t tracker::advance(size_t count) {
     size_t i = 0;
-    for (; i < count && m_index < m_inputs.size(); ++i, ++m_index) {
-      m_sm64.set_input(m_inputs[m_index]);
+    for (; i < count && m_index < m_frames.size(); ++i, ++m_index) {
+      m_sm64.set_input(m_frames[m_index]);
       m_sm64.advance();
     }
     return i;
@@ -31,10 +31,10 @@ namespace trowel {
           "tracker::skip_to() cannot skip backwards (index: {} -> target: {})",
           m_index, target));
 
-    size_t real_target = std::min(m_inputs.size(), target);
+    size_t real_target = std::min(m_frames.size(), target);
 
     while (m_index < real_target) {
-      m_sm64.set_input(m_inputs[m_index]);
+      m_sm64.set_input(m_frames[m_index]);
       m_sm64.advance();
       ++m_index;
     }
@@ -46,10 +46,10 @@ namespace trowel {
 
     // if we're in the middle of the input file, truncate to the current
     // position
-    if (m_index < m_inputs.size())
-      m_inputs.resize(m_index);
+    if (m_index < m_frames.size())
+      m_frames.resize(m_index);
 
-    m_inputs.emplace_back(next);
+    m_frames.emplace_back(next);
     ++m_index;
   }
 
@@ -74,14 +74,14 @@ namespace trowel {
     slot_range_check(n);
 
     m_sm64.save_to(m_state_pool[n].state);
-    m_state_pool[n].inputs = m_inputs;
+    m_state_pool[n].inputs = m_frames;
     m_state_pool[n].index = m_index;
   }
   void tracker::load_slot(size_t n) {
     slot_range_check(n);
 
     m_sm64.load_from(m_state_pool[n].state);
-    m_inputs = m_state_pool[n].inputs;
+    m_frames = m_state_pool[n].inputs;
     m_index = m_state_pool[n].index;
   }
 

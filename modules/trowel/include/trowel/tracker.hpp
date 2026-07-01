@@ -2,6 +2,7 @@
 #define TROWEL_TRACKER_HPP_INCLUDED
 
 #include <limits>
+#include <span>
 #include <vector>
 #include "sm64/globals.hpp"
 #include "sm64/library.hpp"
@@ -26,11 +27,16 @@ namespace trowel {
     template <class T>
     const T* operator[](sm64::ptr_global<T> global) const;
 
+    // Returns a span containing the current set of frames.
+    std::span<const vcr::frame> frames() {
+      return m_frames;
+    }
+
 #pragma region Basic timekeeping
     // Returns the current frame index.
     size_t index() const { return m_index; }
     // Returns the number of frames in the sequence.
-    size_t num_frames() const { return m_inputs.size(); }
+    size_t num_frames() const { return m_frames.size(); }
 
     // Tries to advances `count` frames forward, up to the end of the current inputs.
     // Returns the number of frames advanced.
@@ -81,7 +87,7 @@ namespace trowel {
     void slot_range_check(size_t index);
 
     sm64::libsm64 m_sm64;
-    std::vector<vcr::frame> m_inputs;
+    std::vector<vcr::frame> m_frames;
     size_t m_index = 0;
 
     sm64::libsm64::state m_reset_state;
