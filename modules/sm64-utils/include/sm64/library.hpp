@@ -23,6 +23,9 @@ namespace sm64 {
       friend class libsm64;
 
     public:
+      // Creates a new blank state with no allocation or data.
+      state();
+
       state(const state& rhs);
       state& operator=(const state& rhs);
 
@@ -32,9 +35,6 @@ namespace sm64 {
       ~state() = default;
 
     private:
-      state(size_t data_len, size_t bss_len);
-      state(const libsm64& lib);
-
       // Checks whether a given state's buffers can be reused (for a libsm64
       // instance).
       bool is_valid_for(const libsm64& lib) const;
@@ -88,8 +88,6 @@ namespace sm64 {
 #pragma endregion
 
 #pragma region Savestates
-    // Creates a new, empty savestate.
-    state blank_state() const;
     // Saves the current state to a savestate.
     void save_to(state& state) const;
     // Loads a savestate.

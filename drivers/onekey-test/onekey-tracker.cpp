@@ -1,9 +1,8 @@
-
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <filesystem>
 #include <print>
+#include "trowel/tracker.hpp"
 #include "sm64/constants.hpp"
 #include "sm64/object_fields.hpp"
 #include "sm64/globals.hpp"
@@ -20,8 +19,9 @@ const struct {
 
 int main() {
   using sm64::globals;
-  sm64::libsm64 sm64(main_paths.libsm64_jp);
+  // sm64::libsm64 sm64(main_paths.libsm64_jp);
   vcr::m64 onekey(main_paths.onekey_m64);
+  trowel::tracker sm64(main_paths.libsm64_jp, std::vector(onekey.begin(), onekey.end()));
 
   auto& gCurrLevelNum = sm64[globals::gCurrLevelNum];
   auto& gObjectPool   = sm64[globals::gObjectPool];
@@ -29,6 +29,8 @@ int main() {
   const auto* bhvBully = sm64[globals::bhvSmallBully];
   const auto* bhvWiiVCPlat = sm64[globals::bhvBitFSSinkingPlatforms];
   const auto* bhvSpinHeart = sm64[globals::bhvRecoveryHeart];
+
+  constexpr size_t BITFS_SLOT = 0;
 
   constexpr size_t BULLY_SLOT = 27;
   constexpr size_t HEART_SLOT = 29;
@@ -38,24 +40,24 @@ int main() {
   constexpr float WIIVC_PLAT_HOME_Y = -3065;
   constexpr float HEART_Y = -2700;
 
-  auto bitfs_state         = sm64.blank_state();
-  uint32_t bitfs_frame_idx = 0;
+  bool found_bitfs = false;
 
-  for (uint32_t i = 0; i < onekey.size(); i++) {
-    if (gCurrLevelNum == sm64::LEVEL_BITFS && bitfs_frame_idx == 0) {
-      std::println("Found BitFS before frame {}", i);
-      bitfs_frame_idx = i;
-      sm64.save_to(bitfs_state);
+  sm64.ensure_states(3);
+
+  while (sm64.index() < sm64.num_frames()) {
+    if (gCurrLevelNum == sm64::LEVEL_BITFS && !found_bitfs) {
+      std::println("Found BitFS at frame {}", sm64.index());
+      found_bitfs = true;
+      sm64.save_slot(BITFS_SLOT);
     }
 
-    sm64.set_input(onekey[i]);
     sm64.advance();
   }
   // confirm that the .m64 reaches the end of the run
   assert(gCurrLevelNum == sm64::LEVEL_BOWSER_3);
 
   // reload BitFS
-  sm64.load_from(bitfs_state);
+  sm64.load_slot(BITFS_SLOT);
   assert(gCurrLevelNum == sm64::LEVEL_BITFS);
   
   // confirm bully, heart, and wiivc platform are in their respective slots

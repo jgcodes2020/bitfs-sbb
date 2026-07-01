@@ -18,7 +18,7 @@ namespace sm64 {
     mfp_sm64_update = (p_sm64_update) m_lib.get("sm64_update");
 
     // get needed globals
-    m_gControllerPads = (OSContPad (*)[4]) m_lib.get("gControllerPads");
+    m_gControllerPads = (OSContPad(*)[4]) m_lib.get("gControllerPads");
 
     // call sm64_init
     mfp_sm64_init();
@@ -32,13 +32,12 @@ namespace sm64 {
   vcr::frame libsm64::input(uint8_t port) const {
     if (port > 3)
       throw std::out_of_range("Port must range between 0 and 3");
-    
+
     const auto& pad_obj = (*m_gControllerPads)[port];
     return vcr::frame {
       .buttons = (vcr::button) pad_obj.button,
       .stick_x = pad_obj.stick_x,
-      .stick_y = pad_obj.stick_y
-    };
+      .stick_y = pad_obj.stick_y};
   }
 
   void libsm64::set_input(vcr::frame frame, uint8_t port) {
@@ -51,10 +50,6 @@ namespace sm64 {
     pad_obj.button  = (u16) frame.buttons;
     pad_obj.stick_x = frame.stick_x;
     pad_obj.stick_y = frame.stick_y;
-  }
-
-  libsm64::state libsm64::blank_state() const {
-    return state(*this);
   }
 
   void libsm64::save_to(state& state) const {
@@ -76,17 +71,11 @@ namespace sm64 {
     std::memcpy(m_bss_sect.address, state.m_bss_base.get(), state.m_bss_len);
   }
 
-  libsm64::state::state(size_t data_len, size_t bss_len) :
-    m_data_base(new std::byte[data_len]),
-    m_data_len(data_len),
-    m_bss_base(new std::byte[bss_len]),
-    m_bss_len(bss_len) {}
+  libsm64::state::state() :
+    m_data_base(nullptr), m_data_len(0), m_bss_base(nullptr), m_bss_len(0) {}
 
-  libsm64::state::state(const libsm64& lib) :
-    state(lib.m_data_sect.length, lib.m_bss_sect.length) {}
-
-  libsm64::state::state(const state& rhs) :
-    state(rhs.m_data_len, rhs.m_bss_len) {
+  libsm64::state::state(const state& rhs) : state() {
+    allocate_for(rhs);
     memcpy(m_data_base.get(), rhs.m_data_base.get(), m_data_len);
     memcpy(m_bss_base.get(), rhs.m_bss_base.get(), m_bss_len);
   }
@@ -111,9 +100,9 @@ namespace sm64 {
 
   libsm64::state& libsm64::state::operator=(state&& rhs) {
     m_data_base = std::move(rhs.m_data_base);
-    m_data_len = rhs.m_data_len;
-    m_bss_base = std::move(rhs.m_bss_base);
-    m_bss_len = rhs.m_bss_len;
+    m_data_len  = rhs.m_data_len;
+    m_bss_base  = std::move(rhs.m_bss_base);
+    m_bss_len   = rhs.m_bss_len;
 
     // set rhs buffer sizes to 0 (to indicate invalid)
     rhs.m_data_len = rhs.m_bss_len = 0;

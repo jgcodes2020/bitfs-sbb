@@ -32,23 +32,32 @@ namespace trowel {
     // Returns the number of frames in the sequence.
     size_t num_frames() const { return m_inputs.size(); }
 
-    // Advances using the provided frame.
-    // Inputs past this point will be clobbered.
-    void advance_with(vcr::frame next);
+    // Tries to advances `count` frames forward, up to the end of the current inputs.
+    // Returns the number of frames advanced.
+    size_t advance(size_t count = 1);
 
     // Jumps forward to the provided frame index.
     // If the index is past the last frame, jumps to the end instead.
-    size_t skip_to(size_t frame = npos);
+    void skip_to(size_t target = npos);
+
+    // Advances using the provided frame.
+    // Inputs past this point will be clobbered.
+    void advance_with(vcr::frame next);
 
     // Jumps back to frame 0.
     void restart();
 #pragma endregion
 
 #pragma region Savestates
-    // Ensures n states are present in the state pool.
-    void reserve_states(size_t n);
+    // Sets the number of states available in the state pool.
+    // There may be more states present; though states past the end cannot be
+    // used.
+    void ensure_states(size_t n);
 
-    // Trims the state pool to the current size, if needed.
+    // Returns the current size of the state pool.
+    size_t num_states() const { return m_num_states; }
+
+    // Trims the state pool's inner capacity to the current size.
     void trim_states();
 
     // Saves the game and input state to slot n.
@@ -68,14 +77,17 @@ namespace trowel {
       size_t index;
     };
 
+    // Ensures a slot index is valid, throwing if not.
+    void slot_range_check(size_t index);
+
     sm64::libsm64 m_sm64;
     std::vector<vcr::frame> m_inputs;
-    size_t m_index;
+    size_t m_index = 0;
 
     sm64::libsm64::state m_reset_state;
 
-    std::vector<state_slot> m_state_pool;
-    size_t m_state_count;
+    std::vector<state_slot> m_state_pool {};
+    size_t m_num_states = 0;
   };
 
   template <class T>
