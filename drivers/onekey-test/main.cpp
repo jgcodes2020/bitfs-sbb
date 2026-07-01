@@ -14,7 +14,7 @@
 const struct {
   std::filesystem::path self = __FILE__;
   std::filesystem::path libsm64_jp =
-    self.parent_path().parent_path() / "libsm64/lib/sm64_jp" DECAN_LIB_EXT;
+    self.parent_path().parent_path().parent_path() / "libsm64/lib/sm64_jp" DECAN_LIB_EXT;
   std::filesystem::path onekey_m64 = self.parent_path() / "onekey.m64";
 } main_paths;
 
