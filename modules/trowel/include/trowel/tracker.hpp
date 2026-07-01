@@ -44,7 +44,7 @@ namespace trowel {
     // Inputs past this point will be clobbered.
     void advance_with(vcr::frame next);
 
-    // Jumps back to frame 0.
+    // Jumps back to frame 0 of the current input sequence.
     void restart();
 #pragma endregion
 

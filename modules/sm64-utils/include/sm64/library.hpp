@@ -55,9 +55,11 @@ namespace sm64 {
     // Loads and initializes libsm64.
     libsm64(const std::filesystem::path& path);
 
+    // A loaded library cannot be copied.
     libsm64(const libsm64&)            = delete;
     libsm64& operator=(const libsm64&) = delete;
 
+    
     libsm64(libsm64&&)            = default;
     libsm64& operator=(libsm64&&) = default;
 

@@ -39,6 +39,7 @@ namespace decan {
 		handle_t m_handle;
 
   public:
+    // Loads a library from a given path.
     library(const std::filesystem::path& path);
     
     library(const library&) = delete;
@@ -60,7 +61,7 @@ namespace decan {
 		// This maps directly to GetProcAddress/dlsym.
     void* get(const char* symbol) const;
 
-    // Loads the file and parses section data.
+    // Extracts section info by loading the library file and parsing the section table.
     std::unordered_map<std::string, section_info> read_sections();
   };
 

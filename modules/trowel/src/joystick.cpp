@@ -47,6 +47,7 @@ namespace trowel {
 
   std::pair<int16_t, float> input_to_ym(
     int8_t x, int8_t y, int16_t camera_yaw) {
+    // Note: Tyler simply had a LUT to do this, which I think was a bad decision performance-wise
     
     // Perform adjustment for the controller input.
     // https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/src/game/game_init.c#L433-L459
@@ -73,7 +74,7 @@ namespace trowel {
     int16_t base_intended_yaw =
       (intended_mag > 0.0f) ? sm64::atan2s(-adj_y, adj_x) : 0;
 
-    // return the yaw magnitude
+    // return the yaw magnitude (with camera)
     return {base_intended_yaw + camera_yaw, intended_mag};
   }
 }  // namespace trowel
