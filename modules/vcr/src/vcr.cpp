@@ -121,7 +121,7 @@ namespace vcr {
     // x64 is little-endian, so everything lines up
     for (size_t i = 0; i < m_inputs.size(); i++) {
       size_t off = i * 4;
-      m_inputs[i].buttons = static_cast<frame::button>((uint8_t(data[off]) << 8) | uint8_t(data[off + 1]));
+      m_inputs[i].buttons = static_cast<button>((uint8_t(data[off]) << 8) | uint8_t(data[off + 1]));
       m_inputs[i].stick_x = data[off + 2];
       m_inputs[i].stick_y = data[off + 3];
     }

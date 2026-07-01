@@ -3,6 +3,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <utility>
+#include "sm64/types.hpp"
 #include "vcr.hpp"
 
 namespace sm64 {
@@ -17,7 +18,7 @@ namespace sm64 {
     mfp_sm64_update = (p_sm64_update) m_lib.get("sm64_update");
 
     // get needed globals
-    m_gControllerPads = &(*this)[globals::gControllerPads];
+    m_gControllerPads = (OSContPad (*)[4]) m_lib.get("gControllerPads");
 
     // call sm64_init
     mfp_sm64_init();
@@ -26,6 +27,18 @@ namespace sm64 {
   void libsm64::advance() {
     // sm64_update advances the game 1 frame
     mfp_sm64_update();
+  }
+
+  vcr::frame libsm64::input(uint8_t port) const {
+    if (port > 3)
+      throw std::out_of_range("Port must range between 0 and 3");
+    
+    const auto& pad_obj = (*m_gControllerPads)[port];
+    return vcr::frame {
+      .buttons = (vcr::button) pad_obj.button,
+      .stick_x = pad_obj.stick_x,
+      .stick_y = pad_obj.stick_y
+    };
   }
 
   void libsm64::set_input(vcr::frame frame, uint8_t port) {
@@ -40,11 +53,11 @@ namespace sm64 {
     pad_obj.stick_y = frame.stick_y;
   }
 
-  libsm64::state libsm64::blank_state() {
+  libsm64::state libsm64::blank_state() const {
     return state(*this);
   }
 
-  void libsm64::save_to(state& state) {
+  void libsm64::save_to(state& state) const {
     // if the data doesn't line up, reallocate
     if (!state.is_valid_for(*this))
       state.allocate_for(*this);

@@ -1,13 +1,14 @@
 #ifndef VCR_HPP
 #define VCR_HPP
 
-#include <cstdint>
 #include <string.h>
+#include <cstdint>
 #include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
+
 
 /**
  * @brief Defines bitwise operators on an enum.
@@ -57,76 +58,76 @@
   }
 
 namespace vcr {
-  struct frame final {
+  /**
+   * @brief Enum representing button inputs.
+   */
+  enum class button : uint16_t {
+    none = 0,
     /**
-     * @brief Enum representing button inputs.
+     * @brief The A button.
      */
-    enum class button : uint16_t {
-      none = 0,
-      /**
-       * @brief The A button.
-       */
-      A = 0x8000,
-      /**
-       * @brief The B button.
-       */
-      B = 0x4000,
-      /**
-       * @brief The Z trigger.
-       */
-      Z = 0x2000,
+    A = 0x8000,
+    /**
+     * @brief The B button.
+     */
+    B = 0x4000,
+    /**
+     * @brief The Z trigger.
+     */
+    Z = 0x2000,
 
-      /**
-       * @brief The START button.
-       */
-      START = 0x1000,
+    /**
+     * @brief The START button.
+     */
+    START = 0x1000,
 
-      /**
-       * @brief The UP key on the D-pad.
-       */
-      D_UP = 0x0800,
-      /**
-       * @brief The DOWN key on the D-pad.
-       */
-      D_DOWN = 0x0400,
-      /**
-       * @brief The LEFT key on the D-pad.
-       */
-      D_LEFT = 0x0200,
-      /**
-       * @brief The RIGHT key on the D-pad.
-       */
-      D_RIGHT = 0x0100,
-      
-      U1 = 0x0080,
-      U2 = 0x0040,
+    /**
+     * @brief The UP key on the D-pad.
+     */
+    D_UP = 0x0800,
+    /**
+     * @brief The DOWN key on the D-pad.
+     */
+    D_DOWN = 0x0400,
+    /**
+     * @brief The LEFT key on the D-pad.
+     */
+    D_LEFT = 0x0200,
+    /**
+     * @brief The RIGHT key on the D-pad.
+     */
+    D_RIGHT = 0x0100,
 
-      /**
-       * @brief The L trigger.
-       */
-      L = 0x0020,
-      /**
-       * @brief The R trigger.
-       */
-      R = 0x0010,
+    U1 = 0x0080,
+    U2 = 0x0040,
 
-      /**
-       * @brief The C-up (aka C^) button.
-       */
-      C_UP = 0x0008,
-      /**
-       * @brief The C-down (aka Cv) button.
-       */
-      C_DOWN = 0x0004,
-      /**
-       * @brief The C-left (aka C< or C) button.
-       */
-      C_LEFT = 0x0002,
-      /**
-       * @brief The C-right (aka C>) button.
-       */
-      C_RIGHT = 0x0001
-    };
+    /**
+     * @brief The L trigger.
+     */
+    L = 0x0020,
+    /**
+     * @brief The R trigger.
+     */
+    R = 0x0010,
+
+    /**
+     * @brief The C-up (aka C^) button.
+     */
+    C_UP = 0x0008,
+    /**
+     * @brief The C-down (aka Cv) button.
+     */
+    C_DOWN = 0x0004,
+    /**
+     * @brief The C-left (aka C< or C) button.
+     */
+    C_LEFT = 0x0002,
+    /**
+     * @brief The C-right (aka C>) button.
+     */
+    C_RIGHT = 0x0001
+  };
+  struct frame final {
     button buttons;
     // The X/Y coordinates of the analog stick.
     int8_t stick_x, stick_y;
@@ -143,17 +144,20 @@ namespace vcr {
   class m64 {
   private:
     std::vector<frame> m_inputs;
+
   public:
     using iterator       = decltype(m_inputs)::iterator;
     using const_iterator = decltype(m_inputs)::const_iterator;
-    
+
     /**
      * @brief Metadata struct, contains all the metadata.
      */
     struct metadata_t {
       friend class m64;
+
     private:
       uint32_t _num_input_frames = 0;
+
     public:
       /**
        * @brief The version of this M64. Should be 3.
@@ -163,7 +167,7 @@ namespace vcr {
        * @brief The recording timestamp. Used as a UID of sorts.
        */
       uint32_t timestamp;
-      
+
       /**
        * @brief The length of this movie in VIs.
        */
@@ -176,19 +180,17 @@ namespace vcr {
        * @brief Essentially amounts to frames per second.
        */
       uint8_t vis_per_s = 60;
-      
+
       /**
        * @brief The number of controllers used.
        */
       uint8_t num_controllers = 1;
-      
+
       /**
        * @brief Returns the length of this M64.
        */
-      uint32_t num_input_frames() const {
-        return _num_input_frames;
-      }
-      
+      uint32_t num_input_frames() const { return _num_input_frames; }
+
       /**
        * @brief States that an M64 can be started from.
        */
@@ -201,7 +203,7 @@ namespace vcr {
        * @brief The way this M64 should be started.
        */
       start_flags start_type = start_flags::FROM_RESET;
-      
+
       /**
        * @brief Bit flags for controllers and their accessories.
        */
@@ -223,7 +225,7 @@ namespace vcr {
        * @brief The current set of flags for controllers and their accessories.
        */
       ctrl_flags controllers = ctrl_flags::PORT1_PRESENT;
-      
+
       /**
        * @brief The internal ROM name.
        * @note This will be truncated to 31 characters when serializing.
@@ -237,7 +239,7 @@ namespace vcr {
        * @brief The country code of the ROM.
        */
       uint16_t country_code;
-      
+
       /**
        * @brief The video plugin used.
        * @note This will be truncated to 63 characters when serializing.
@@ -258,13 +260,13 @@ namespace vcr {
        * @note This will be truncated to 63 characters when serializing.
        */
       std::string rsp_plugin;
-      
+
       /**
        * @brief A list of authors of this M64.
        * @note This will be truncated to 221 bytes when serializing.
        */
       std::string authors;
-      
+
       /**
        * @brief A description of this M64.
        * @note This will be truncated to 255 bytes when serializing.
@@ -287,7 +289,8 @@ namespace vcr {
      * @param mdata the metadata
      */
     template <typename input_it>
-    m64(input_it begin, input_it end, const metadata_t& mdata) : m_inputs(begin, end), metadata(mdata) {
+    m64(input_it begin, input_it end, const metadata_t& mdata) :
+      m_inputs(begin, end), metadata(mdata) {
       size_t rsize = m_inputs.size();
       // if any of the upper 32 bits are set, it's too big
       if (rsize & 0xFFFFFFFF00000000) {
@@ -318,7 +321,7 @@ namespace vcr {
      */
     frame& at(uint32_t frame);
     const frame& at(uint32_t frame) const;
-    
+
     /**
      * @brief Returns the first frame.
      *
@@ -402,15 +405,15 @@ namespace vcr {
      * @brief Removes the last frame.
      */
     void pop_back();
-    
+
     /**
      * @brief Serializes this M64 to an output stream.
-     * 
+     *
      * @param out an output stream to write to
      */
     void dump(std::filesystem::path path);
   };
-  _PANCAKE_ENUM_BITFIELD_OPS(frame::button)
+  _PANCAKE_ENUM_BITFIELD_OPS(button)
   _PANCAKE_ENUM_BITFIELD_OPS(m64::metadata_t::ctrl_flags)
-}  // namespace pancake
+}  // namespace vcr
 #endif
