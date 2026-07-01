@@ -6,7 +6,30 @@ namespace sm64 {
                     : g_arctan_table[(int32_t) (y / x * 1024 + 0.5f)];
   }
 
-  int16_t atan2s_game(float y, float x) {
+  int16_t atan2s(float y, float x) {
+    // Determine which directions to fold
+    const bool flip_x = x < 0;
+    const bool flip_y = y < 0;
+
+    // fold coordinates onto quadrant 1
+    if (flip_x) x = -x;
+    if (flip_y) y = -y;
+
+    // lookup in quadrant 1
+    uint16_t theta = (y >= x)? atan2_lookup(x, y) : 0x4000 - atan2_lookup(y, x);
+
+    // unfold angle back out
+    if (flip_y) theta = 0x8000 - theta;
+    if (flip_x) theta = -theta;
+
+    return (int16_t) theta;
+  }
+
+  /*
+  // Base implementation of atan2 from the game.
+  // The compacted implementation below should be bit-exact with
+  // this algorithm.
+  int16_t atan2s(float y, float x) {
     uint16_t ret;
 
     if (x >= 0) {
@@ -50,22 +73,5 @@ namespace sm64 {
     }
     return (int16_t) ret;
   }
-
-  int16_t atan2s(float y, float x) {
-    const bool flip_x = x < 0;
-    const bool flip_y = y < 0;
-
-    // reduce coordinates to quadrant 1
-    if (flip_x) x = -x;
-    if (flip_y) y = -y;
-
-    // lookup in quadrant 1
-    uint16_t theta = (y >= x)? atan2_lookup(x, y) : 0x4000 - atan2_lookup(y, x);
-
-    // unfold angle back out
-    if (flip_y) theta = 0x8000 - theta;
-    if (flip_x) theta = -theta;
-
-    return (int16_t) theta;
-  }
+  */
 }  // namespace sm64
