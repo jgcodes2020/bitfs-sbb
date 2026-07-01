@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 #include "vcr.hpp"
 
 namespace sm64 {
@@ -30,10 +31,11 @@ namespace sm64 {
   void libsm64::set_input(vcr::frame frame, uint8_t port) {
     if (port > 3)
       throw std::out_of_range("Port must range between 0 and 3");
-    
-    // inputs are set by directly modifying gControllerPads; these are reset after each frame advance
-    auto& pad_obj = (*m_gControllerPads)[port];
-    pad_obj.button = (u16) frame.buttons;
+
+    // inputs are set by directly modifying gControllerPads; these are reset
+    // after each frame advance
+    auto& pad_obj   = (*m_gControllerPads)[port];
+    pad_obj.button  = (u16) frame.buttons;
     pad_obj.stick_x = frame.stick_x;
     pad_obj.stick_y = frame.stick_y;
   }
@@ -61,11 +63,50 @@ namespace sm64 {
     std::memcpy(m_bss_sect.address, state.m_bss_base.get(), state.m_bss_len);
   }
 
+  libsm64::state::state(size_t data_len, size_t bss_len) :
+    m_data_base(new std::byte[data_len]),
+    m_data_len(data_len),
+    m_bss_base(new std::byte[bss_len]),
+    m_bss_len(bss_len) {}
+
   libsm64::state::state(const libsm64& lib) :
-    m_data_base(new std::byte[lib.m_data_sect.length]),
-    m_data_len(lib.m_data_sect.length),
-    m_bss_base(new std::byte[lib.m_bss_sect.length]),
-    m_bss_len(lib.m_bss_sect.length) {}
+    state(lib.m_data_sect.length, lib.m_bss_sect.length) {}
+
+  libsm64::state::state(const state& rhs) :
+    state(rhs.m_data_len, rhs.m_bss_len) {
+    memcpy(m_data_base.get(), rhs.m_data_base.get(), m_data_len);
+    memcpy(m_bss_base.get(), rhs.m_bss_base.get(), m_bss_len);
+  }
+
+  libsm64::state& libsm64::state::operator=(const state& rhs) {
+    if (!is_valid_for(rhs))
+      allocate_for(rhs);
+
+    memcpy(m_data_base.get(), rhs.m_data_base.get(), m_data_len);
+    memcpy(m_bss_base.get(), rhs.m_bss_base.get(), m_bss_len);
+    return *this;
+  }
+
+  libsm64::state::state(state&& rhs) :
+    m_data_base(std::move(rhs.m_data_base)),
+    m_data_len(rhs.m_data_len),
+    m_bss_base(std::move(rhs.m_bss_base)),
+    m_bss_len(rhs.m_bss_len) {
+    // set rhs buffer sizes to 0 (to indicate invalid)
+    rhs.m_data_len = rhs.m_bss_len = 0;
+  }
+
+  libsm64::state& libsm64::state::operator=(state&& rhs) {
+    m_data_base = std::move(rhs.m_data_base);
+    m_data_len = rhs.m_data_len;
+    m_bss_base = std::move(rhs.m_bss_base);
+    m_bss_len = rhs.m_bss_len;
+
+    // set rhs buffer sizes to 0 (to indicate invalid)
+    rhs.m_data_len = rhs.m_bss_len = 0;
+
+    return *this;
+  }
 
   bool libsm64::state::is_valid_for(const libsm64& lib) const {
     // ensure this isn't moved-out
@@ -77,10 +118,26 @@ namespace sm64 {
       m_bss_len == lib.m_bss_sect.length;
   }
 
+  bool libsm64::state::is_valid_for(const state& rhs) const {
+    // ensure this isn't moved-out
+    if (m_data_base == nullptr || m_bss_base == nullptr)
+      return false;
+
+    // ensure allocations are correctly sized
+    return m_data_len == rhs.m_data_len && m_bss_len == rhs.m_bss_len;
+  }
+
   void libsm64::state::allocate_for(const libsm64& lib) {
     m_data_base.reset(new std::byte[lib.m_data_sect.length]);
     m_data_len = lib.m_data_sect.length;
     m_bss_base.reset(new std::byte[lib.m_bss_sect.length]);
     m_bss_len = lib.m_bss_sect.length;
+  }
+
+  void libsm64::state::allocate_for(const state& rhs) {
+    m_data_base.reset(new std::byte[rhs.m_data_len]);
+    m_data_len = rhs.m_data_len;
+    m_bss_base.reset(new std::byte[rhs.m_bss_len]);
+    m_bss_len = rhs.m_bss_len;
   }
 }  // namespace sm64

@@ -12,28 +12,35 @@ namespace sm64 {
   using p_sm64_init = void (DECAN_STDCALL*)();
   using p_sm64_update = void (DECAN_STDCALL*)();
 
-  // Class encapsulating libsm64.
+  // A loaded instance of libsm64.
   class libsm64 {
   public:
+    // A savestate created from the global data segments of libsm64.
+    // Is otherwise opaque besides containing save data.
     class state {
       // allow access to the private bits
       friend class libsm64;
     public:
-      state(const state& rhs) = delete;
-      state& operator=(const state& rhs) = delete;
+      state(const state& rhs);
+      state& operator=(const state& rhs);
 
-      state(state&& rhs) = default;
-      state& operator=(state&& rhs) = default;
+      state(state&& rhs);
+      state& operator=(state&& rhs);
 
       ~state() = default;
       
     private:
+      state(size_t data_len, size_t bss_len);
       state(const libsm64& lib);
 
-      // Checks whether a given state's buffers can be reused.
+      // Checks whether a given state's buffers can be reused (for a libsm64 instance).
       bool is_valid_for(const libsm64& lib) const;
-      // allocates/reallocates buffers for the savestate.
+      // Checks whether a given state's buffers can be reused (for copying).
+      bool is_valid_for(const state& lib) const;
+      // Allocates/reallocates buffers for the savestate (for a libsm64 instance).
       void allocate_for(const libsm64& lib);
+      // allocates/reallocates buffers for the savestate (for copying).
+      void allocate_for(const state& rhs);
 
       std::unique_ptr<std::byte[]> m_data_base;
       size_t m_data_len;
@@ -52,26 +59,31 @@ namespace sm64 {
 
     ~libsm64() = default;
 
+#pragma region Fundamental operations
     // Advances the game state by 1 frame.
     void advance();
 
     // Retrieves a reference to a global.
     template <class T>
     T& operator[](sized_global<T> global);
-
     // Retrieves a reference to a global.
     template <class T>
     T operator[](ptr_global<T> global);
+#pragma endregion
 
+#pragma region Secondary operations
     // Sets a given controller port's input using a VCR frame.
     void set_input(vcr::frame frame, uint8_t port = 0);
+#pragma endregion
 
+#pragma region Savestates
     // Creates a new, empty savestate.
     state blank_state();
     // Saves the current state to a savestate.
     void save_to(state& state);
     // Loads a savestate.
     void load_from(const state& state);
+#pragma endregion
 
   private:
     // library
