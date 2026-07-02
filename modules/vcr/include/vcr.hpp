@@ -11,7 +11,6 @@
 #include <type_traits>
 #include <vector>
 
-
 /**
  * @brief Defines bitwise operators on an enum.
  */
@@ -68,66 +67,66 @@ namespace vcr {
     /**
      * @brief The A button.
      */
-    A = 0x8000,
+    a = 0x8000,
     /**
      * @brief The B button.
      */
-    B = 0x4000,
+    b = 0x4000,
     /**
      * @brief The Z trigger.
      */
-    Z = 0x2000,
+    z = 0x2000,
 
     /**
      * @brief The START button.
      */
-    START = 0x1000,
+    start = 0x1000,
 
     /**
      * @brief The UP key on the D-pad.
      */
-    D_UP = 0x0800,
+    d_up = 0x0800,
     /**
      * @brief The DOWN key on the D-pad.
      */
-    D_DOWN = 0x0400,
+    d_down = 0x0400,
     /**
      * @brief The LEFT key on the D-pad.
      */
-    D_LEFT = 0x0200,
+    d_left = 0x0200,
     /**
      * @brief The RIGHT key on the D-pad.
      */
-    D_RIGHT = 0x0100,
+    d_right = 0x0100,
 
-    U1 = 0x0080,
-    U2 = 0x0040,
+    u1 = 0x0080,
+    u2 = 0x0040,
 
     /**
      * @brief The L trigger.
      */
-    L = 0x0020,
+    l = 0x0020,
     /**
      * @brief The R trigger.
      */
-    R = 0x0010,
+    r = 0x0010,
 
     /**
      * @brief The C-up (aka C^) button.
      */
-    C_UP = 0x0008,
+    c_up = 0x0008,
     /**
      * @brief The C-down (aka Cv) button.
      */
-    C_DOWN = 0x0004,
+    c_down = 0x0004,
     /**
      * @brief The C-left (aka C< or C) button.
      */
-    C_LEFT = 0x0002,
+    c_left = 0x0002,
     /**
      * @brief The C-right (aka C>) button.
      */
-    C_RIGHT = 0x0001
+    c_right = 0x0001
   };
   struct frame final {
     button buttons;
@@ -136,11 +135,38 @@ namespace vcr {
   };
 
   /**
+   * @brief States that an M64 can be started from.
+   */
+  enum class start_flags : uint16_t {
+    from_snapshot = 0x01,
+    from_reset    = 0x02,
+    from_eeprom   = 0x04
+  };
+
+  /**
    * @brief Indicates that a loaded M64 file is invalid.
    *
    */
   class invalid_m64 : public std::runtime_error {
     using std::runtime_error::runtime_error;
+  };
+
+  /**
+   * @brief Bit flags for controllers and their accessories.
+   */
+  enum class ctrl_flags : uint32_t {
+    port1_present = 0x0001,
+    port2_present = 0x0002,
+    port3_present = 0x0004,
+    port4_present = 0x0008,
+    port1_memory  = 0x0010,
+    port2_memory  = 0x0020,
+    port3_memory  = 0x0040,
+    port4_memory  = 0x0080,
+    port1_rumble  = 0x0100,
+    port2_rumble  = 0x0200,
+    port3_rumble  = 0x0400,
+    port4_rumble  = 0x0800
   };
 
   class m64 {
@@ -194,39 +220,14 @@ namespace vcr {
       uint32_t num_input_frames() const { return _num_input_frames; }
 
       /**
-       * @brief States that an M64 can be started from.
-       */
-      enum class start_flags : uint16_t {
-        FROM_SNAPSHOT = 0x01,
-        FROM_RESET    = 0x02,
-        FROM_EEPROM   = 0x04
-      };
-      /**
        * @brief The way this M64 should be started.
        */
-      start_flags start_type = start_flags::FROM_RESET;
+      start_flags start_type = start_flags::from_reset;
 
-      /**
-       * @brief Bit flags for controllers and their accessories.
-       */
-      enum class ctrl_flags : uint32_t {
-        PORT1_PRESENT = 0x0001,
-        PORT2_PRESENT = 0x0002,
-        PORT3_PRESENT = 0x0004,
-        PORT4_PRESENT = 0x0008,
-        PORT1_MEMORY  = 0x0010,
-        PORT2_MEMORY  = 0x0020,
-        PORT3_MEMORY  = 0x0040,
-        PORT4_MEMORY  = 0x0080,
-        PORT1_RUMBLE  = 0x0100,
-        PORT2_RUMBLE  = 0x0200,
-        PORT3_RUMBLE  = 0x0400,
-        PORT4_RUMBLE  = 0x0800
-      };
       /**
        * @brief The current set of flags for controllers and their accessories.
        */
-      ctrl_flags controllers = ctrl_flags::PORT1_PRESENT;
+      ctrl_flags controllers = ctrl_flags::port1_present;
 
       /**
        * @brief The internal ROM name.
@@ -414,6 +415,6 @@ namespace vcr {
     void dump(std::filesystem::path path);
   };
   _PANCAKE_ENUM_BITFIELD_OPS(button)
-  _PANCAKE_ENUM_BITFIELD_OPS(m64::metadata_t::ctrl_flags)
+  _PANCAKE_ENUM_BITFIELD_OPS(ctrl_flags)
 }  // namespace vcr
 #endif

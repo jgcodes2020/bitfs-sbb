@@ -14,6 +14,24 @@ namespace trowel {
   public:
     static constexpr size_t npos = std::numeric_limits<size_t>::max();
 
+    // Combined state information for both libsm64 and the input frames.
+    class state {
+      friend class tracker;
+    public:
+      state() = default;
+
+      // Returns a span containing the saved input frames.
+      std::span<const vcr::frame> frames() { return m_frames; }
+
+      // Returns the index at which this frame was saved.
+      size_t index() { return m_index; }
+
+    private:
+      sm64::libsm64::state m_state;
+      std::vector<vcr::frame> m_frames;
+      size_t m_index;
+    };
+
     // Sets up the tracker using the provided path to libsm64 and input
     // sequence.
     tracker(
@@ -28,9 +46,7 @@ namespace trowel {
     const T* operator[](sm64::ptr_global<T> global) const;
 
     // Returns a span containing the current set of frames.
-    std::span<const vcr::frame> frames() {
-      return m_frames;
-    }
+    std::span<const vcr::frame> frames() { return m_frames; }
 
 #pragma region Basic timekeeping
     // Returns the current frame index.
@@ -38,8 +54,8 @@ namespace trowel {
     // Returns the number of frames in the sequence.
     size_t num_frames() const { return m_frames.size(); }
 
-    // Tries to advances `count` frames forward, up to the end of the current inputs.
-    // Returns the number of frames advanced.
+    // Tries to advances `count` frames forward, up to the end of the current
+    // inputs. Returns the number of frames advanced.
     size_t advance(size_t count = 1);
 
     // Jumps forward to the provided frame index.
@@ -55,45 +71,20 @@ namespace trowel {
 #pragma endregion
 
 #pragma region Savestates
-    // Sets the number of states available in the state pool.
-    // There may be more states present; though states past the end cannot be
-    // used.
-    void ensure_states(size_t n);
-
-    // Returns the current size of the state pool.
-    size_t num_states() const { return m_num_states; }
-
-    // Trims the state pool's inner capacity to the current size.
-    void trim_states();
-
-    // Saves the game and input state to slot n.
-    void save_slot(size_t n);
-
-    // Loads the game and input state from slot n.
-    void load_slot(size_t n);
-
-    // Copies one slot to another.
-    void copy_slot(size_t src, size_t dst);
+    // Saves the current state to a savestate.
+    void save_to(state& state) const;
+    
+    // Loads from a savestate.
+    void load_from(const state& state);
 #pragma endregion
 
   private:
-    struct state_slot {
-      sm64::libsm64::state state;
-      std::vector<vcr::frame> inputs;
-      size_t index;
-    };
-
-    // Ensures a slot index is valid, throwing if not.
-    void slot_range_check(size_t index);
 
     sm64::libsm64 m_sm64;
     std::vector<vcr::frame> m_frames;
     size_t m_index = 0;
 
     sm64::libsm64::state m_reset_state;
-
-    std::vector<state_slot> m_state_pool {};
-    size_t m_num_states = 0;
   };
 
   template <class T>

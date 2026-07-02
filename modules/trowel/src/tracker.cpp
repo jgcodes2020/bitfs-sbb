@@ -58,45 +58,15 @@ namespace trowel {
     m_index = 0;
   }
 
-  void tracker::ensure_states(size_t n) {
-    m_num_states = n;
-    // resize if more slots are needed
-    if (m_num_states > m_state_pool.size())
-      m_state_pool.resize(m_num_states);
-  }
-  void tracker::trim_states() {
-    // resize if less slots are needed
-    if (m_num_states < m_state_pool.size())
-      m_state_pool.resize(m_num_states);
+  void tracker::save_to(state& state) const {
+    m_sm64.save_to(state.m_state);
+    state.m_frames = m_frames;
+    state.m_index = m_index;
   }
 
-  void tracker::save_slot(size_t n) {
-    slot_range_check(n);
-
-    m_sm64.save_to(m_state_pool[n].state);
-    m_state_pool[n].inputs = m_frames;
-    m_state_pool[n].index = m_index;
-  }
-  void tracker::load_slot(size_t n) {
-    slot_range_check(n);
-
-    m_sm64.load_from(m_state_pool[n].state);
-    m_frames = m_state_pool[n].inputs;
-    m_index = m_state_pool[n].index;
-  }
-
-  void tracker::copy_slot(size_t src, size_t dst) {
-    slot_range_check(src);
-    slot_range_check(dst);
-
-    m_state_pool[dst] = m_state_pool[src];
-  }
-
-  void tracker::slot_range_check(size_t index) {
-    if (index >= m_num_states)
-      throw std::out_of_range(
-        std::format(
-          "tracker::slot_range_check(): invalid state slot index {} (m_num_states = {})",
-          index, m_num_states));
+  void tracker::load_from(const state& state) {
+    m_sm64.load_from(state.m_state);
+    m_frames = state.m_frames;
+    m_index = state.m_index;
   }
 }  // namespace trowel

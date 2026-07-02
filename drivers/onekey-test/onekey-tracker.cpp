@@ -2,18 +2,19 @@
 #include <cstddef>
 #include <filesystem>
 #include <print>
-#include "trowel/tracker.hpp"
 #include "sm64/constants.hpp"
-#include "sm64/object_fields.hpp"
 #include "sm64/globals.hpp"
 #include "sm64/library.hpp"
+#include "sm64/object_fields.hpp"
 #include "sm64/types.hpp"
+#include "trowel/tracker.hpp"
 #include "vcr.hpp"
 
 const struct {
   std::filesystem::path self = __FILE__;
   std::filesystem::path libsm64_jp =
-    self.parent_path().parent_path().parent_path() / "libsm64/lib/sm64_jp" DECAN_LIB_EXT;
+    self.parent_path().parent_path().parent_path() /
+    "libsm64/lib/sm64_jp" DECAN_LIB_EXT;
   std::filesystem::path onekey_m64 = self.parent_path() / "onekey.m64";
 } main_paths;
 
@@ -21,34 +22,34 @@ int main() {
   using sm64::globals;
   // sm64::libsm64 sm64(main_paths.libsm64_jp);
   vcr::m64 onekey(main_paths.onekey_m64);
-  trowel::tracker sm64(main_paths.libsm64_jp, std::vector(onekey.begin(), onekey.end()));
+  trowel::tracker sm64(
+    main_paths.libsm64_jp, std::vector(onekey.begin(), onekey.end()));
 
   auto& gCurrLevelNum = sm64[globals::gCurrLevelNum];
   auto& gObjectPool   = sm64[globals::gObjectPool];
 
-  const auto* bhvBully = sm64[globals::bhvSmallBully];
+  const auto* bhvBully     = sm64[globals::bhvSmallBully];
   const auto* bhvWiiVCPlat = sm64[globals::bhvBitFSSinkingPlatforms];
   const auto* bhvSpinHeart = sm64[globals::bhvRecoveryHeart];
 
-  constexpr size_t BITFS_SLOT = 0;
-
-  constexpr size_t BULLY_SLOT = 27;
-  constexpr size_t HEART_SLOT = 29;
+  constexpr size_t BULLY_SLOT      = 27;
+  constexpr size_t HEART_SLOT      = 29;
   constexpr size_t WIIVC_PLAT_SLOT = 81;
 
-  constexpr float BULLY_HOME_Y = -2764;
+  constexpr float BULLY_HOME_Y      = -2764;
   constexpr float WIIVC_PLAT_HOME_Y = -3065;
-  constexpr float HEART_Y = -2700;
+  constexpr float HEART_Y           = -2700;
 
+  auto bitfs_state = trowel::tracker::state();
   bool found_bitfs = false;
 
-  sm64.ensure_states(3);
+  // sm64.ensure_states(3);
 
   while (sm64.index() < sm64.num_frames()) {
     if (gCurrLevelNum == sm64::LEVEL_BITFS && !found_bitfs) {
       std::println("Found BitFS at frame {}", sm64.index());
       found_bitfs = true;
-      sm64.save_slot(BITFS_SLOT);
+      sm64.save_to(bitfs_state);
     }
 
     sm64.advance();
@@ -57,12 +58,12 @@ int main() {
   assert(gCurrLevelNum == sm64::LEVEL_BOWSER_3);
 
   // reload BitFS
-  sm64.load_slot(BITFS_SLOT);
+  sm64.load_from(bitfs_state);
   assert(gCurrLevelNum == sm64::LEVEL_BITFS);
-  
+
   // confirm bully, heart, and wiivc platform are in their respective slots
-  auto& bully = gObjectPool[BULLY_SLOT];
-  auto& heart = gObjectPool[HEART_SLOT];
+  auto& bully      = gObjectPool[BULLY_SLOT];
+  auto& heart      = gObjectPool[HEART_SLOT];
   auto& wiivc_plat = gObjectPool[WIIVC_PLAT_SLOT];
 
   assert(bully.behavior == bhvBully);
