@@ -2,9 +2,11 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <format>
 #include <iterator>
 #include <limits>
 #include <map>
+#include <stdexcept>
 #include <utility>
 #include "sm64/math_util.hpp"
 
@@ -166,28 +168,27 @@ namespace trowel {
       return ym_match::partial;
     }
 
-    // From 0, produces the next element in the sequence: 0, 1, -1, 2, -2, ...
-    inline int16_t snake_offset(int16_t curr) {
-      return (curr > 0)? -curr + 1 : -curr;
+    // Computes the next offset to search.
+    inline int16_t next_offset(int16_t curr, ym_search_dir search_dir) {
+      switch (search_dir) {
+        case ym_search_dir::both: return (curr > 0)? -curr + 1 : -curr;
+        case ym_search_dir::cw: return curr + 1;
+        case ym_search_dir::ccw: return curr - 1;
+      }
+      abort();
     }
   }  // namespace
 
   std::pair<int8_t, int8_t> find_input_by_ym_exact(
-    int16_t intended_yaw, float intended_mag, int16_t camera_yaw) {
-    constexpr size_t MAX_ATTEMPTS = 256;
-
-    // TODO: THIS FUNCTION DOESN'T QUITE WORK YET
-    abort();
+    int16_t intended_yaw, float intended_mag, int16_t camera_yaw, ym_search_dir search_dir) {
+    // adjust cap as needed
+    constexpr size_t MAX_ATTEMPTS = 1024;
 
     // special case: 0 mag
     if (intended_mag == 0.0f)
       return {0, 0};
 
-    int16_t min_intended_yaw = hau_round(intended_yaw);
-    int16_t max_intended_yaw = min_intended_yaw + 16;
-
-    min_intended_yaw -= camera_yaw;
-    max_intended_yaw -= camera_yaw;
+    int16_t base_intended_yaw = intended_yaw - camera_yaw;
 
     std::pair<int8_t, int8_t> best_input = {0, 0};
     float best_mag_delta = std::numeric_limits<float>::infinity();
@@ -196,7 +197,12 @@ namespace trowel {
     int16_t offset = 0;
 
     for (size_t attempts = 0; attempts < MAX_ATTEMPTS; ++attempts) {
+      auto match_result = ym_check_single_yaw(base_intended_yaw + offset, intended_mag, best_input, best_mag_delta);
+      if (match_result != ym_match::none)
+        return best_input;
 
+      offset = next_offset(offset, search_dir);
     }
+    throw std::runtime_error(std::format("Failed to find a matching stick angle after {} attempts", MAX_ATTEMPTS));
   }
 }  // namespace trowel
