@@ -15,7 +15,8 @@ namespace trowel {
     return ((uint16_t) p >> 4) == ((uint16_t) q >> 4);
   }
 
-  // For find_input_by_ym_*, the direction(s) to search for a usable stick angle.
+  // For find_input_by_ym_*, the direction(s) to search for a usable stick
+  // angle.
   enum class ym_search_dir {
     // Searches in both directions from the desired yaw.
     both,
@@ -28,12 +29,17 @@ namespace trowel {
   // Computes the resulting yaw and magnitude from the given input.
   std::pair<int16_t, float> input_to_ym(int8_t x, int8_t y, int16_t camera_yaw);
 
-  // Finds the closest input stick angle for the given yaw (to HAU precision) and magnitude, based on the camera yaw.
-  std::pair<int8_t, int8_t> find_input_by_ym_hau(int16_t intended_yaw, float intended_mag, int16_t camera_yaw, ym_search_dir search_dir = ym_search_dir::both);
-  // Finds the closest input stick angle for the given yaw and magnitude, based on the camera yaw.
-  std::pair<int8_t, int8_t> find_input_by_ym_exact(int16_t intended_yaw, float intended_mag, int16_t camera_yaw, ym_search_dir search_dir = ym_search_dir::both);
+  // Finds the closest input stick angle for the given yaw (to HAU precision)
+  // and magnitude, based on the camera yaw.
+  std::pair<int8_t, int8_t> find_input_by_ym_hau(
+    int16_t intended_yaw, float intended_mag, int16_t camera_yaw,
+    ym_search_dir search_dir = ym_search_dir::both);
+  // Finds the closest input stick angle for the given yaw and magnitude, based
+  // on the camera yaw.
+  std::pair<int8_t, int8_t> find_input_by_ym_exact(
+    int16_t intended_yaw, float intended_mag, int16_t camera_yaw,
+    ym_search_dir search_dir = ym_search_dir::both);
 
-  
-}
+}  // namespace trowel
 
 #endif
