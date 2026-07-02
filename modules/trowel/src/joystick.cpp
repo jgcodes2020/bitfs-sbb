@@ -169,18 +169,23 @@ namespace trowel {
     }
 
     // Computes the next offset to search.
+    template <int16_t Step = 1>
     inline int16_t next_offset(int16_t curr, ym_search_dir search_dir) {
       switch (search_dir) {
-        case ym_search_dir::both: return (curr > 0)? -curr + 1 : -curr;
-        case ym_search_dir::cw: return curr + 1;
-        case ym_search_dir::ccw: return curr - 1;
+        case ym_search_dir::both:
+          return (curr > 0) ? -curr : -curr + Step;
+        case ym_search_dir::cw:
+          return curr + Step;
+        case ym_search_dir::ccw:
+          return curr - Step;
       }
       abort();
     }
   }  // namespace
 
   std::pair<int8_t, int8_t> find_input_by_ym_exact(
-    int16_t intended_yaw, float intended_mag, int16_t camera_yaw, ym_search_dir search_dir) {
+    int16_t intended_yaw, float intended_mag, int16_t camera_yaw,
+    ym_search_dir search_dir) {
     // adjust cap as needed
     constexpr size_t MAX_ATTEMPTS = 1024;
 
@@ -193,16 +198,66 @@ namespace trowel {
     std::pair<int8_t, int8_t> best_input = {0, 0};
     float best_mag_delta = std::numeric_limits<float>::infinity();
 
-    bool found_match = false;
     int16_t offset = 0;
 
     for (size_t attempts = 0; attempts < MAX_ATTEMPTS; ++attempts) {
-      auto match_result = ym_check_single_yaw(base_intended_yaw + offset, intended_mag, best_input, best_mag_delta);
+      // check the next closest yaw; immediately return the best result
+      auto match_result = ym_check_single_yaw(
+        base_intended_yaw + offset, intended_mag, best_input, best_mag_delta);
       if (match_result != ym_match::none)
         return best_input;
 
       offset = next_offset(offset, search_dir);
     }
-    throw std::runtime_error(std::format("Failed to find a matching stick angle after {} attempts", MAX_ATTEMPTS));
+    throw std::runtime_error(
+      std::format(
+        "Failed to find a matching stick angle after {} attempts",
+        MAX_ATTEMPTS));
+  }
+
+  std::pair<int8_t, int8_t> find_input_by_ym_hau(
+    int16_t intended_yaw, float intended_mag, int16_t camera_yaw,
+    ym_search_dir search_dir) {
+    // adjust cap as needed
+    constexpr size_t MAX_ATTEMPTS = 64;
+
+    // special case: 0 mag
+    if (intended_mag == 0.0f)
+      return {0, 0};
+
+    int16_t min_intended_yaw = hau_round(intended_yaw) - camera_yaw;
+    int16_t max_intended_yaw = min_intended_yaw + 16;
+
+    std::pair<int8_t, int8_t> best_input = {0, 0};
+    float best_mag_delta = std::numeric_limits<float>::infinity();
+
+    bool found_matching_yaw = false;
+    int16_t offset          = 0;
+    for (size_t attempts = 0; attempts < MAX_ATTEMPTS; ++attempts) {
+      for (int16_t yaw = min_intended_yaw + offset;
+           yaw != max_intended_yaw + offset; ++yaw) {
+        // check this yaw value
+        auto match_result = ym_check_single_yaw(
+          yaw + offset, intended_mag, best_input, best_mag_delta);
+
+        // if we find an exact match, return immediately
+        if (match_result == ym_match::exact)
+          return best_input;
+
+        // if we find a partial match, take note of that
+        if (match_result == ym_match::partial)
+          found_matching_yaw = true;
+      }
+
+      // if we found a partial match in the last HAU, use it.
+      // note that if we're searching both directions, we ensure we've checked
+      // both sides before returning a result.
+      if (
+        found_matching_yaw && (search_dir != ym_search_dir::both || offset < 0))
+        return best_input;
+
+      // step size of offset is now 16 because we're checking 1 HAU at a time
+      offset = next_offset<16>(offset, search_dir);
+    }
   }
 }  // namespace trowel
